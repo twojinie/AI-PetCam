@@ -2,7 +2,7 @@
 
 Gemini 2.0 Flash(Vertex AI)와 OpenCV 모션 감지를 이용해 강아지의 행동(먹기, 마시기, 배변, 수면 등)을 24시간 실시간으로 모니터링하고 기록하는 지능형 파이프라인입니다.
 
-## 📁 컴포넌트 구조
+## 컴포넌트 구조
 ```
 dog_monitor/
 ├── merge_and_upload.py  # (옵션) 로컬 클립들을 하나의 영상으로 병합 후 GCS 업로드
@@ -13,7 +13,7 @@ dog_monitor/
 └── clips/               # 분석 대상 원본 영상 (.mp4)
 ```
 
-## 🛠 설치 및 사전 준비
+## 설치 및 사전 준비
 
 1. **Python 라이브러리 설치**
    ```bash
@@ -41,7 +41,7 @@ python merge_and_upload.py
 python pipeline.py
 ```
 
-## 🧠 핵심 로직 흐름
+## 핵심 로직 흐름
 
 1. **연속 스트림 분석 (10초 청크)**
    - 파이프라인은 전체 영상을 10초씩 순회합니다.
@@ -55,7 +55,7 @@ python pipeline.py
    - 분석 결과는 `dog_monitor.db`에 저장됩니다. 
    - 강아지가 낮잠(lying)을 자고 일어나면 총 수면 시간(분 단위)을 계산하여 하루 통계에 자동으로 합산합니다.
 
-## 🗄 SQLite DB 테이블 (`dog_monitor.db`)
+## SQLite DB 테이블 (`dog_monitor.db`)
 
 | 테이블 명 | 역할 | 주요 컬럼 |
 |--------|------|------|
@@ -63,5 +63,5 @@ python pipeline.py
 | `daily_summary` | 하루 통계 (대시보드용) | `eating_count`, `drinking_count`, `lying_minutes` |
 | `state` | 현재/임시 상태 저장 | `lying_since` (수면 시작 시간 추적용) |
 
-## 💡 주요 Try-Except 처리
+## 주요 Try-Except 처리
 - **빈 영상 오류**: 영상 병합이나 자르기 중 0바이트 빈 파일이 생기면, 파이프라인이 멈추지 않도록 스킵 로직과 1KB 이하 필터링을 도입
