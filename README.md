@@ -1,4 +1,4 @@
-# 🐶 강아지 행동 모니터링 파이프라인 (VLM Pipeline)
+# 🐶 강아지 행동 모니터링 파이프라인 (VLM Pipeline) _ 임시 readme
 
 Gemini 2.0 Flash(Vertex AI)와 OpenCV 모션 감지를 이용해 강아지의 행동(먹기, 마시기, 배변, 수면 등)을 24시간 실시간으로 모니터링하고 기록하는 지능형 파이프라인입니다.
 
