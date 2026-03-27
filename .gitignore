@@ -1,0 +1,14 @@
+# 환경변수 및 인증키 
+.env
+*.json
+
+# 임시 영상 및 미디어 파일 
+*.mp4
+clips/
+
+# DB 및 로그 파일 (개인 기록)
+# dog_monitor.db
+# alerts.log
+
+# 파이썬 캐시
+__pycache__/
