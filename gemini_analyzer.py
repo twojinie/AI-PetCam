@@ -10,6 +10,7 @@ Gemini Native Video API 사용 → 음성 + 영상 동시 분석
 """
 import os
 import json
+import requests
 from dataclasses import dataclass
 from typing import Optional
 from google import genai
@@ -38,6 +39,7 @@ STATE_CONTEXT = {
 
 
 def analyze_clip(video_path: str,
+                 machine_code: str = "",
                  current_state: str = "normal",
                  is_sudden_motion: bool = False,
                  time_context: str = "") -> AnalysisResult:
@@ -46,6 +48,7 @@ def analyze_clip(video_path: str,
 
     Args:
         video_path: 분석할 영상 경로
+        machine_code: 기계 코드 (Device ID)
         current_state: 현재 상태 컨텍스트 ("lying" or "normal")
         is_sudden_motion: 모션 감지기에서 갑작스러운 움직임 감지됐는지 여부
         time_context: 이전 영상들로부터 누적된 행동 맥락 (예: "몇 청크 단위째 연속 누워있음")
@@ -79,6 +82,7 @@ def analyze_clip(video_path: str,
     )
 
     context_hint = f"※ 누적 상황 기록: {time_context}" if time_context else ""
+    machine_hint = f"※ 기계 코드(Device ID): {machine_code}" if machine_code else ""
 
 ######### prompt #########
 # context_hint 에는 lying 상태가 얼마나 지속되었는지에 대한 정보만 있음. prompt에서 언급한 누적 상황이 주어짐에 관한 부분 애매
@@ -88,6 +92,7 @@ def analyze_clip(video_path: str,
 {state_context}
 {sudden_hint}
 {context_hint}
+{machine_hint}
 
 강아지의 행동을 면밀히 분석하고 가장 두드러진 행동을 선택해주세요. 이전 상황(누적 상황)이 주어진다면 이를 참고하여 불안 징후를 판별하세요.
 특히 다음 사항들을 주의 깊게 구별하세요:
@@ -159,7 +164,7 @@ is_issue 판단 기준:
         input_tokens = getattr(response.usage_metadata, "prompt_token_count", 0)
         output_tokens = getattr(response.usage_metadata, "candidates_token_count", 0)
 
-    return AnalysisResult(
+    result_obj = AnalysisResult(
         action=data.get("action", "idle"),
         confidence=float(data.get("confidence", 0.0)),
         detail=data.get("detail", ""),
@@ -171,3 +176,22 @@ is_issue 판단 기준:
         input_tokens=input_tokens,
         output_tokens=output_tokens
     )
+
+    # NestJS 서버(localhost:4000)로 결과 전송
+    try:
+        payload = {
+            "machineCode": machine_code,
+            "action": result_obj.action,
+            "confidence": result_obj.confidence,
+            "detail": result_obj.detail,
+            "isIssue": result_obj.is_issue,
+            "issueType": result_obj.issue_type,
+            "posture": result_obj.posture,
+            "emotion": result_obj.emotion
+        }
+        # 엔드포인트 경로는 상황에 맞게 수정하세요
+        requests.post("http://localhost:4000/api/ai-events", json=payload, timeout=3)
+    except Exception as e:
+        print(f"[경고] 서버(4000번 포트)로 결과를 전송하지 못했습니다: {e}")
+
+    return result_obj

@@ -22,6 +22,7 @@ class MotionResult:
 
 # 영상의 start_sec부터 duration_sec(예: 10초) 동안만 잘라서 모션을 확인하는 함수
 def analyze_motion_chunk(video_path: str, start_sec: float, duration_sec: float,
+                         machine_code: str = "",
                          motion_threshold: int = 3000,
                          sudden_threshold: int = 15000,
                          target_fps: int = 1) -> MotionResult:
@@ -129,10 +130,37 @@ def analyze_motion_chunk(video_path: str, start_sec: float, duration_sec: float,
     )
 
 def analyze_motion(video_path: str,
+                   machine_code: str = "",
                    motion_threshold: int = 3000,
                    sudden_threshold: int = 15000,
                    target_fps: int = 1) -> MotionResult:
     # 하위 호환성을 위해 분석 시간을 매우 길게 지정해서 전체 클립 분석
-    return analyze_motion_chunk(video_path, 0.0, 99999.0, motion_threshold, sudden_threshold, target_fps)
+    return analyze_motion_chunk(video_path, 0.0, 99999.0, machine_code, motion_threshold, sudden_threshold, target_fps)
+
+if __name__ == "__main__":
+    import sys
+    import os
+    
+    if len(sys.argv) < 2:
+        print("사용법: python motion_detector.py <기계코드> [비디오경로]")
+        sys.exit(1)
+        
+    machine_code = sys.argv[1]
+    test_video = sys.argv[2] if len(sys.argv) > 2 else "test.mp4"
+    
+    print(f"[{machine_code}] 기계 코드 적용 - 모션 분석 시작: {test_video}")
+    result = analyze_motion(test_video, machine_code=machine_code)
+    
+    print(f"모션 감지 여부: {result.has_motion}")
+    
+    if result.has_motion:
+        try:
+            from gemini_analyzer import analyze_clip
+            print(f"[{machine_code}] Gemini 분석으로 넘깁니다...")
+            # gemini_analyzer 쪽으로 기계 코드(인자) 함께 전달
+            gemini_result = analyze_clip(test_video, machine_code=machine_code)
+            print(f"Gemini 분석 결과: {gemini_result.action} / {gemini_result.detail}")
+        except ImportError:
+            print("gemini_analyzer.py 를 찾을 수 없거나 임포트 에러가 발생했습니다.")
 
 
